@@ -5,25 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BeatSaberMan"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" MinHeight="400" MinWidth="400" Closing="MainWindow_Closing">
+        Title="BeatSaberMan" Height="450" Width="800" MinHeight="400" MinWidth="750" Closing="MainWindow_Closing">
     <Window.Resources>
-        <Style x:Key="LevelStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="5,0,0,0" />
-            <Setter Property="FontSize" Value="18" />
-            <Setter Property="FontWeight" Value="Medium" />
-        </Style>
-        <Style x:Key="ButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Margin" Value="3"/>
-            <Setter Property="Padding" Value="1,0,0,0"/>
-            <Setter Property="FontFamily" Value="Helvetica"/>
-            <Setter Property="FontSize" Value="28"/>
-            <Setter Property="FontWeight" Value="Black"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="MainWindowIcons.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="LevelStyle" TargetType="TextBlock">
+                <Setter Property="Margin" Value="5,0,0,0" />
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontWeight" Value="Medium" />
+            </Style>
+            <Style x:Key="ItemButtonStyle" TargetType="Button">
+                <Setter Property="Width" Value="28"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Margin" Value="2"/>
+                <Setter Property="Padding" Value="3"/>
+            </Style>
+            <Style x:Key="TopButtonStyle" TargetType="Button">
+                <Setter Property="Margin" Value="10"/>
+                <Setter Property="Padding" Value="5"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
-    <Grid Name="MainGrid">
-        <ListBox x:Name="lbSongs" Margin="0,64,0,0" HorizontalContentAlignment="Stretch">
+    <DockPanel>
+        <StackPanel Orientation="Horizontal" Height="64" DockPanel.Dock="Top">
+            <Button Click="OnRefreshClick" Style="{StaticResource TopButtonStyle}">
+                <Image Source="{StaticResource RefreshIcon}"/>
+            </Button>
+        </StackPanel>
+        <ListBox x:Name="lbSongs" HorizontalContentAlignment="Stretch" DockPanel.Dock="Bottom">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Border BorderBrush="LightGray" BorderThickness="0,0,0,1" >
@@ -65,15 +76,24 @@
                                     </Border>
                                 </Grid>
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Vertical" Width="39">
-                                <Button Content="►" Click="OnClickPlay" Tag="{Binding SongDir}" Style="{StaticResource ButtonStyle}" FontFamily="Courier New"/>
-                                <Button Content="F" Click="OnClickFolder" Tag="{Binding SongDir}" Style="{StaticResource ButtonStyle}"/>
-                                <Button Content="X" Click="OnClickDelete" Tag="{Binding SongDir}" Style="{StaticResource ButtonStyle}"/>
+                            <StackPanel Grid.Column="2" Orientation="Vertical" Width="39" Margin="2">
+                                <Button Click="OnClickPlay" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                    <Image Source="{StaticResource PlayIcon}"/>
+                                </Button>
+                                <Button Click="OnClickFolder" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                    <Image Source="{StaticResource FolderIcon}"/>
+                                </Button>
+                                <Button Click="OnClickFix" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}" IsEnabled="{Binding FixEnabled}">
+                                    <Image Source="{StaticResource FixIcon}"/>
+                                </Button>
+                                <Button Click="OnClickDelete" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                    <Image Source="{StaticResource DeleteIcon}"/>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-    </Grid>
+    </DockPanel>
 </Window>
