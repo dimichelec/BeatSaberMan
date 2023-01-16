@@ -6,7 +6,7 @@
 BeatSaberMan is an open source Beat Saber custom song manager written by [Carmen DiMichele](https://dimichelec.wixsite.com/carmendimichele) 
 
 This C# Windows WPF app makes it easy to review the list of custom songs you currently have installed
-  on Beat Saber, see play stats, and delete a song folder.
+  on Beat Saber, see play stats, fix a song that has bad beatmaps that won't load, and delete a song folder and its contents.
 
 
 <!-- --------------------------------------------------------------------
