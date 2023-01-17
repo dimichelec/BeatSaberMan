@@ -13,9 +13,23 @@ This C# Windows WPF app makes it easy to review the list of custom songs you cur
 
 Coding Notes:
 
+* only reload song that's been fixed after fixing a song
+
+* add top area stats and functions:
+  - count of songs, count of maps with errors, etc.
+  - button to fix all erroneous maps
+  - sort/filter buttons by artist, filter level(s), filter errors...
+
+* add high score info
+
+* select practice mode or something to signal a delete in BSM
+
+* is there a way to setup a filter in BSM that will show-up in BS, or
+  re-order list to show up in BS in a differnt order
+
 * change level coloring to color by count ranking
 
-* add top area stats and functions
+* make an icon
 
 * add a way to mark a song just in this UI
 
@@ -23,8 +37,6 @@ Coding Notes:
 
 * clean-up code
   
-
-* test change
 -------------------------------------------------------------------- -->
 
 

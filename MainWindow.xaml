@@ -33,6 +33,10 @@
             <Button Click="OnRefreshClick" Style="{StaticResource TopButtonStyle}">
                 <Image Source="{StaticResource RefreshIcon}"/>
             </Button>
+            <StackPanel Orientation="Horizontal"  VerticalAlignment="Bottom">
+                <TextBlock x:Name="tbSongCount" Margin="3,0,0,8" FontSize="18" FontWeight="DemiBold"/>
+                <TextBlock x:Name="tbErroneousSongs" Margin="3,0,0,8" FontSize="18" FontWeight="DemiBold" Foreground="DarkRed"/>
+            </StackPanel>
         </StackPanel>
         <ListBox x:Name="lbSongs" HorizontalContentAlignment="Stretch" DockPanel.Dock="Bottom">
             <ListBox.ItemTemplate>

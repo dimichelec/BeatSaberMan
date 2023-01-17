@@ -57,7 +57,8 @@ namespace BeatSaberMan
 
         public void GetSongAppData()
         {
-            string dataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber\";
+            string dataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) 
+                + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber\";
             SongHashes = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(
                 new StreamReader(dataDir + @"\SongHashData.dat").ReadToEnd());
             PlayerData = JsonConvert.DeserializeObject<Dictionary<string, object>>(
@@ -81,11 +82,8 @@ namespace BeatSaberMan
         public string GetMediaDuration(string path)
         {
             Media media = new Media(libvlc, new Uri(path));
-            _ = media.Parse();
-            while (media.ParsedStatus != MediaParsedStatus.Done)
-            {
-                Thread.Sleep(1);
-            }
+            media.Parse();
+            while (media.ParsedStatus != MediaParsedStatus.Done) Thread.Sleep(1);
             return (media.Duration / 60000).ToString("D2") + ":" + (media.Duration / 1000 % 60).ToString("D2");
         }
 
@@ -133,17 +131,11 @@ namespace BeatSaberMan
             int[] plays = { 0, 0, 0, 0, 0 };
             string songName = info._songName.ToString();
             string levelDirName = "custom_level_" + dir.Split(@"\")[^1];
-            string songHash = "";
-            if (SongHashes.ContainsKey(dir))
-            {
-                songHash = SongHashes[dir]["songHash"].ToString();
-            }
+            string songHash = SongHashes.ContainsKey(dir) ? SongHashes[dir]["songHash"].ToString() : "";
             foreach (dynamic dat in LocalPlayerData)
             {
                 if ((dat["levelId"] == songName) || (dat["levelId"] == levelDirName) || (dat["levelId"] == songHash))
-                {
                     plays[(int)dat["difficulty"]] += (int)dat["playCount"];
-                }
             }
             return plays;
         }
@@ -182,7 +174,6 @@ namespace BeatSaberMan
             StreamWriter writer = new StreamWriter(path);
             writer.WriteLine(JsonConvert.SerializeObject(json, Formatting.None));
             writer.Close();
-
             return true;
         }
 
@@ -217,6 +208,7 @@ namespace BeatSaberMan
 
         private void LoadSongs()
         {
+            int ErroneousSongs = 0;
             string[] dirs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly);
             foreach (string dir in dirs)
             {
@@ -229,7 +221,7 @@ namespace BeatSaberMan
                 img.UriSource = new Uri(dir + @"\" + info._coverImageFilename);
                 img.EndInit();
 
-                _ = lbSongs.Items.Add(new SongCell()
+                lbSongs.Items.Add(new SongCell()
                 {
                     SongDir = dir,
                     CoverImage = img,
@@ -252,16 +244,22 @@ namespace BeatSaberMan
                     LevelErrors = info.LevelErrors,
                     FixEnabled = Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? "True" : "False",
                 });
+                ErroneousSongs += Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? 1 : 0;
             }
 
+            // update top bar song/error counts
+            tbSongCount.Text = dirs.Length.ToString() + " SONGS";
+            tbErroneousSongs.Text = "";
+            if (ErroneousSongs > 0)
+            {
+                tbSongCount.Text += ",";
+                tbErroneousSongs.Text = ErroneousSongs.ToString() + " WITH BEATMAP ERRORS";
+            }
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (vlcPlayer.IsPlaying)
-            {
-                vlcPlayer.Stop();
-            }
+            if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
             vlcPlayer.Dispose();
         }
 
@@ -272,10 +270,7 @@ namespace BeatSaberMan
         private Button StopPlaying()
         {
             Button tmp = lastPlayed;
-            if (vlcPlayer.IsPlaying)
-            {
-                vlcPlayer.Stop();
-            }
+            if (vlcPlayer.IsPlaying) vlcPlayer.Stop();
             if (lastPlayed != null)
             {
                 lastPlayed.Content = new Image() { Source = (ImageSource)FindResource("PlayIcon") };
@@ -289,31 +284,31 @@ namespace BeatSaberMan
             foreach (SongCell item in lbSongs.Items)
             {
                 if (lbSongs.ItemContainerGenerator.ContainerFromItem(item) is FrameworkElement container)
-                {
                     if (container.DataContext is SongCell dat)
-                    {
                         if (dat.SongDir == dir)
-                        {
                             return item;
-                        }
-                    }
-                }
             }
             return null;
+        }
+
+        private void RefreshListBox()
+        {
+            System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            lbSongs.Items.Clear();
+            LoadSongs();
+            lbSongs.ScrollIntoView(lbSongs.Items[0]);
+            System.Windows.Input.Mouse.OverrideCursor = null;
         }
 
         private void OnClickPlay(object sender, RoutedEventArgs e)
         {
             Button clicked = (Button)sender;
-            if (StopPlaying() == clicked)
-            {
-                return;
-            }
+            if (StopPlaying() == clicked) return;
             string dir = clicked.Tag.ToString();
             dynamic array = GetSongInfo(dir);
             string songFilename = dir + @"\" + array._songFilename;
 
-            _ = vlcPlayer.Play(new Media(libvlc, new Uri(songFilename)));
+            vlcPlayer.Play(new Media(libvlc, new Uri(songFilename)));
             clicked.Content = new Image() { Source = (ImageSource)FindResource("StopIcon") };
             lastPlayed = clicked;
         }
@@ -330,36 +325,29 @@ namespace BeatSaberMan
             Button clicked = (Button)sender;
             string dir = clicked.Tag.ToString();
             dynamic info = GetSongInfo(dir);
-            MessageBoxResult result = MessageBox.Show(
-                "Are you sure you want to fix the level files for \"" + info._songName + "\"?  This will overwrite its suspicious .dat files!",
+            if (MessageBox.Show("Are you sure you want to fix the level files for \""
+                + info._songName + "\"?  This will overwrite its suspicious .dat files!",
                 "BeatSaberMan",
                 MessageBoxButton.OKCancel,
-                MessageBoxImage.Exclamation);
-            if (result == MessageBoxResult.OK)
+                MessageBoxImage.Exclamation) != MessageBoxResult.OK) return;
+
+            StopPlaying();
+            foreach (dynamic mapsets in info._difficultyBeatmapSets)
             {
-                StopPlaying();
-                foreach (dynamic mapsets in info._difficultyBeatmapSets)
+                foreach (dynamic map in mapsets._difficultyBeatmaps)
                 {
-                    foreach (dynamic map in mapsets._difficultyBeatmaps)
+                    System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+                    if (!TestBeatmapFile(dir + @"\" + map._beatmapFilename.ToString()))
                     {
-                        System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-                        if (!TestBeatmapFile(dir + @"\" + map._beatmapFilename.ToString()))
-                        {
-                            bool bFixed = FixBeatmap(dir + @"\" + map._beatmapFilename.ToString());
-                            _ = MessageBox.Show(
-                                "\"" + map._beatmapFilename.ToString() + (bFixed ? "\" fixed." : "\" NOT fixed!"),
+                        if (!FixBeatmap(dir + @"\" + map._beatmapFilename.ToString()))
+                            MessageBox.Show("\"" + map._beatmapFilename.ToString() + "\" NOT fixed!",
                                 "BeatSaberMan",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
-                        }
                     }
                 }
-                lbSongs.Items.Clear();
-                LoadSongs();
-                lbSongs.ScrollIntoView(lbSongs.Items[0]);
-                System.Windows.Input.Mouse.OverrideCursor = null;
             }
-
+            RefreshListBox();
         }
 
         private void OnClickDelete(object sender, RoutedEventArgs e)
@@ -368,15 +356,15 @@ namespace BeatSaberMan
             Button clicked = (Button)sender;
             string dir = clicked.Tag.ToString();
             dynamic info = GetSongInfo(dir);
-            MessageBoxResult result = MessageBox.Show(
+            if (MessageBox.Show(
                 "Are you sure you want to delete \"" + info._songName + "\"?  This will trash its folder and its contents!",
                 "BeatSaberMan",
                 MessageBoxButton.OKCancel,
-                MessageBoxImage.Exclamation);
-            if (result == MessageBoxResult.OK)
+                MessageBoxImage.Exclamation) == MessageBoxResult.OK)
             {
                 lbSongs.Items.Remove(FindMyListBoxItem(dir));
                 Directory.Delete(dir, true);
+                RefreshListBox();
             }
         }
 
