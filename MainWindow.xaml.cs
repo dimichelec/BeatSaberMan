@@ -12,6 +12,11 @@ using System.Windows.Media.Imaging;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.Windows.Threading;
+using System.Runtime.CompilerServices;
+using System.Numerics;
+using System.Security.Policy;
 
 namespace BeatSaberMan
 {
@@ -46,6 +51,8 @@ namespace BeatSaberMan
             public string LevelErrors { get; set; }
             public string FixEnabled { get; set; }
         }
+
+        private int ErroneousSongs = -1;
 
         const string BeatSaberRootPath = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
 
@@ -206,55 +213,69 @@ namespace BeatSaberMan
             vlcPlayer = new LibVLCSharp.Shared.MediaPlayer(libvlc);
         }
 
-        private void LoadSongs()
+        private void UpdateTopBar()
         {
-            int ErroneousSongs = 0;
-            string[] dirs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly);
-            foreach (string dir in dirs)
-            {
-                dynamic info = GetSongInfo(dir);
-                info = AddLevelsData(dir, info);
-
-                BitmapImage img = new BitmapImage();
-                img.BeginInit();
-                img.CacheOption = BitmapCacheOption.OnLoad;
-                img.UriSource = new Uri(dir + @"\" + info._coverImageFilename);
-                img.EndInit();
-
-                lbSongs.Items.Add(new SongCell()
-                {
-                    SongDir = dir,
-                    CoverImage = img,
-                    SongName = info._songName,
-                    Artist = info._songAuthorName,
-                    LevelAuthor = "Map by " + info._levelAuthorName,
-                    TrackTime = info.Duration,
-                    BPM = info._beatsPerMinute.ToString().Split(".")[0] + " BPM",
-                    EasyForeground = info.EasyForeground,
-                    EasyBackground = info.EasyBackground,
-                    NormalForeground = info.NormalForeground,
-                    NormalBackground = info.NormalBackground,
-                    HardForeground = info.HardForeground,
-                    HardBackground = info.HardBackground,
-                    ExpertForeground = info.ExpertForeground,
-                    ExpertBackground = info.ExpertBackground,
-                    ExpertPlusForeground = info.ExpertPlusForeground,
-                    ExpertPlusBackground = info.ExpertPlusBackground,
-                    Plays = info.Plays,
-                    LevelErrors = info.LevelErrors,
-                    FixEnabled = Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? "True" : "False",
-                });
-                ErroneousSongs += Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? 1 : 0;
-            }
-
-            // update top bar song/error counts
-            tbSongCount.Text = dirs.Length.ToString() + " SONGS";
+            int songs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly).Length;
+            tbSongCount.Text = songs.ToString() + " SONGS";
             tbErroneousSongs.Text = "";
             if (ErroneousSongs > 0)
             {
                 tbSongCount.Text += ",";
                 tbErroneousSongs.Text = ErroneousSongs.ToString() + " WITH BEATMAP ERRORS";
             }
+        }
+
+        private int LoadSong(string dir, int index = -1)
+        {
+            dynamic info = GetSongInfo(dir);
+            info = AddLevelsData(dir, info);
+
+            BitmapImage img = new BitmapImage();
+            img.BeginInit();
+            img.CacheOption = BitmapCacheOption.OnLoad;
+            img.UriSource = new Uri(dir + @"\" + info._coverImageFilename);
+            img.EndInit();
+
+            SongCell song = new SongCell()
+            {
+                SongDir = dir,
+                CoverImage = img,
+                SongName = info._songName,
+                Artist = info._songAuthorName,
+                LevelAuthor = "Map by " + info._levelAuthorName,
+                TrackTime = info.Duration,
+                BPM = info._beatsPerMinute.ToString().Split(".")[0] + " BPM",
+                EasyForeground = info.EasyForeground,
+                EasyBackground = info.EasyBackground,
+                NormalForeground = info.NormalForeground,
+                NormalBackground = info.NormalBackground,
+                HardForeground = info.HardForeground,
+                HardBackground = info.HardBackground,
+                ExpertForeground = info.ExpertForeground,
+                ExpertBackground = info.ExpertBackground,
+                ExpertPlusForeground = info.ExpertPlusForeground,
+                ExpertPlusBackground = info.ExpertPlusBackground,
+                Plays = info.Plays,
+                LevelErrors = info.LevelErrors,
+                FixEnabled = Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? "True" : "False",
+            };
+
+            if (index == -1) lbSongs.Items.Add(song);
+            else
+            {
+                lbSongs.Items.RemoveAt(index);
+                lbSongs.Items.Insert(index, song);
+            }
+            return Regex.IsMatch(info.LevelErrors.ToString(), @"[^-0]") ? -1 : 0;
+        }
+
+        private void LoadSongs()
+        {
+            ErroneousSongs = 0;
+            string[] dirs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly);
+            foreach (string dir in dirs)
+                if (LoadSong(dir) == -1) ErroneousSongs++;
+            UpdateTopBar();
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -279,24 +300,29 @@ namespace BeatSaberMan
             return tmp;
         }
 
-        private SongCell FindMyListBoxItem(string dir)
+        private (SongCell song, int index) FindMyListBoxItem(string dir)
         {
             foreach (SongCell item in lbSongs.Items)
             {
                 if (lbSongs.ItemContainerGenerator.ContainerFromItem(item) is FrameworkElement container)
                     if (container.DataContext is SongCell dat)
                         if (dat.SongDir == dir)
-                            return item;
+                            return (item, lbSongs.Items.IndexOf(item));
             }
-            return null;
+            return (null, -1);
         }
 
         private void RefreshListBox()
         {
             System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            lbSongs.Items.Clear();
-            LoadSongs();
-            lbSongs.ScrollIntoView(lbSongs.Items[0]);
+            lbSongs.IsEnabled = false;
+            lbSongs.Opacity = 0.1;
+            Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
+                lbSongs.Items.Clear();
+                LoadSongs();
+            }));
+            lbSongs.IsEnabled = true;
+            lbSongs.Opacity = 1;
             System.Windows.Input.Mouse.OverrideCursor = null;
         }
 
@@ -347,7 +373,9 @@ namespace BeatSaberMan
                     }
                 }
             }
-            RefreshListBox();
+            if (LoadSong(dir, FindMyListBoxItem(dir).index) == 0) ErroneousSongs--;
+            UpdateTopBar();
+            System.Windows.Input.Mouse.OverrideCursor = null;
         }
 
         private void OnClickDelete(object sender, RoutedEventArgs e)
@@ -371,11 +399,8 @@ namespace BeatSaberMan
         private void OnRefreshClick(object sender, RoutedEventArgs e)
         {
             StopPlaying();
-            System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            lbSongs.Items.Clear();
-            LoadSongs();
-            lbSongs.ScrollIntoView(lbSongs.Items[0]);
-            System.Windows.Input.Mouse.OverrideCursor = null;
+            RefreshListBox();
         }
+
     }
 }
