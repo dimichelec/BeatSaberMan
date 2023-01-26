@@ -40,24 +40,35 @@ namespace BeatSaberMan
         public dynamic GetSongInfo(string dir)
         {
             // get song info from info.dat file in the song's folder
-            StreamReader infoFile = new StreamReader(dir + @"\info.dat");
-            dynamic info = JsonConvert.DeserializeObject(infoFile.ReadToEnd());
-            infoFile.Close();
-
-            return info;
+            string filename = dir + @"\info.dat";
+            if (File.Exists(filename))
+            {
+                StreamReader infoFile = new StreamReader(filename);
+                dynamic info = JsonConvert.DeserializeObject(infoFile.ReadToEnd());
+                infoFile.Close();
+                return info;
+            }
+            else return null;
         }
 
-        public int[] GetPlaysData(string dir, dynamic info)
+        public Dictionary<string, int[]> GetPlaysData(string dir, dynamic info)
         {
             int[] plays = { 0, 0, 0, 0, 0 };
+            int[] highScores = { -1, -1, -1, -1, -1 };
             string levelDirName = "custom_level_" + dir.Split(@"\")[^1];
             string songHash = SongHashes.ContainsKey(dir) ? SongHashes[dir]["songHash"].ToString() : "";
             foreach (dynamic dat in LocalPlayerData)
             {
                 if ((dat["levelId"] == info._songName.ToString()) || (dat["levelId"] == levelDirName) || (dat["levelId"] == songHash))
+                {
                     plays[(int)dat["difficulty"]] += (int)dat["playCount"];
+                    highScores[(int)dat["difficulty"]] = (int)dat["highScore"];
+                }
             }
-            return plays;
+            var dict = new Dictionary<string, int[]>();
+            dict.Add("plays", plays);
+            dict.Add("highScores", highScores);
+            return dict;
         }
 
         private void InitVLC()
@@ -68,7 +79,7 @@ namespace BeatSaberMan
 
         public int Count()
         {
-            return Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly).Length;
+            return songs.Count;
         }
 
         public void PlayByDir(string dir)
@@ -127,12 +138,11 @@ namespace BeatSaberMan
             foreach (string dir in dirs)
             {
                 dynamic info = GetSongInfo(dir);
-                int[] plays = GetPlaysData(dir, info);
-                Song song = new Song(dir, plays, info);
+                if (info == null) continue;
+                var data = GetPlaysData(dir, info);
+                Song song = new Song(dir, data["plays"], data["highScores"], info);
                 song.TrackTime = GetMediaDuration(dir + @"\" + song.Filename);
-
                 if (song.HasErrors()) ErroneousSongCount++;
-
                 songs.Add(song);
             }
         }
@@ -141,9 +151,8 @@ namespace BeatSaberMan
         {
             int index = songs.IndexOf(pSong);
             dynamic info = GetSongInfo(pSong.SongDir);
-            int[] plays = GetPlaysData(pSong.SongDir, info);
-            
-            Song song = new Song(pSong.SongDir, plays, info);
+            var data = GetPlaysData(pSong.SongDir, info);
+            Song song = new Song(pSong.SongDir, data["plays"], data["highScores"], info);
             song.TrackTime = GetMediaDuration(song.SongDir + @"\" + song.Filename);
             songs.RemoveAt(index);
             songs.Insert(index, song);

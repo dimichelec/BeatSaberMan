@@ -175,7 +175,7 @@ namespace BeatSaberMan
                 MessageBoxButton.OKCancel,
                 MessageBoxImage.Exclamation) == MessageBoxResult.OK)
             {
-                lbSongs.Items.Remove(FindMyListBoxItem(dir));
+                lbSongs.Items.Remove(FindMyListBoxItem(dir).song);
                 Directory.Delete(dir, true);
                 RefreshListBox();
             }
@@ -219,6 +219,7 @@ namespace BeatSaberMan
             if (tag != "")
                 lbSongs.Items.SortDescriptions.Add(
                     new System.ComponentModel.SortDescription(tag, direction));
+            lbSongs.ScrollIntoView(lbSongs.Items[0]);
         }
     }
 }
