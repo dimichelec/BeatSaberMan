@@ -141,6 +141,7 @@
                                                 <RowDefinition/>
                                                 <RowDefinition/>
                                                 <RowDefinition/>
+                                                <RowDefinition/>
                                             </Grid.RowDefinitions>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1*"/>
@@ -152,26 +153,32 @@
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="Plays ►" Style="{StaticResource LevelHeaderStyle}" Grid.Column="0" Grid.Row="1"/>
                                             <TextBlock Text="High Score ►" Style="{StaticResource LevelHeaderStyle}" Grid.Column="0" Grid.Row="2"/>
+                                            <TextBlock Text="Max Combos ►" Style="{StaticResource LevelHeaderStyle}" Grid.Column="0" Grid.Row="3"/>
 
                                             <TextBlock Text=" EASY " Background="{Binding LevelBackgrounds[0]}" Foreground="{Binding LevelForegrounds[0]}" Style="{StaticResource LevelStyle}" Margin="0" Grid.Column="1" Grid.Row="0"/>
                                             <TextBlock Text="{Binding Plays[0]}" Foreground="{Binding LevelForegrounds[0]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="1" Grid.Row="1"/>
                                             <TextBlock Text="{Binding HighScores[0], Converter={StaticResource StringToIntConverter}, ConverterParameter={}{0:N0}}" Foreground="{Binding LevelForegrounds[0]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="1" Grid.Row="2"/>
+                                            <TextBlock Text="{Binding MaxCombos[0]}" Foreground="{Binding LevelForegrounds[0]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="1" Grid.Row="3"/>
 
                                             <TextBlock Text=" NORMAL " Background="{Binding LevelBackgrounds[1]}" Foreground="{Binding LevelForegrounds[1]}" Style="{StaticResource LevelStyle}" Grid.Column="2" Grid.Row="0"/>
                                             <TextBlock Text="{Binding Plays[1]}" Foreground="{Binding LevelForegrounds[1]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="2" Grid.Row="1"/>
                                             <TextBlock Text="{Binding HighScores[1], Converter={StaticResource StringToIntConverter}, ConverterParameter={}{0:N0}}" Foreground="{Binding LevelForegrounds[1]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="2" Grid.Row="2"/>
+                                            <TextBlock Text="{Binding MaxCombos[1]}" Foreground="{Binding LevelForegrounds[1]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="2" Grid.Row="3"/>
 
                                             <TextBlock Text=" HARD " Background="{Binding LevelBackgrounds[2]}" Foreground="{Binding LevelForegrounds[2]}" Style="{StaticResource LevelStyle}" Grid.Column="3" Grid.Row="0"/>
                                             <TextBlock Text="{Binding Plays[2]}" Foreground="{Binding LevelForegrounds[2]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="3" Grid.Row="1"/>
                                             <TextBlock Text="{Binding HighScores[2], Converter={StaticResource StringToIntConverter}, ConverterParameter={}{0:N0}}" Foreground="{Binding LevelForegrounds[2]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="3" Grid.Row="2"/>
+                                            <TextBlock Text="{Binding MaxCombos[2]}" Foreground="{Binding LevelForegrounds[2]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="3" Grid.Row="3"/>
 
                                             <TextBlock Text=" EXPERT " Background="{Binding LevelBackgrounds[3]}" Foreground="{Binding LevelForegrounds[3]}" Style="{StaticResource LevelStyle}" Grid.Column="4" Grid.Row="0"/>
                                             <TextBlock Text="{Binding Plays[3]}" Foreground="{Binding LevelForegrounds[3]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="4" Grid.Row="1"/>
                                             <TextBlock Text="{Binding HighScores[3], Converter={StaticResource StringToIntConverter}, ConverterParameter={}{0:N0}}" Foreground="{Binding LevelForegrounds[3]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="4" Grid.Row="2"/>
+                                            <TextBlock Text="{Binding MaxCombos[3]}" Foreground="{Binding LevelForegrounds[3]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="4" Grid.Row="3"/>
 
                                             <TextBlock Text=" EXPERT+ " Background="{Binding LevelBackgrounds[4]}" Foreground="{Binding LevelForegrounds[4]}" Style="{StaticResource LevelStyle}" Grid.Column="5" Grid.Row="0"/>
                                             <TextBlock Text="{Binding Plays[4]}" Foreground="{Binding LevelForegrounds[4]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="5" Grid.Row="1"/>
                                             <TextBlock Text="{Binding HighScores[4], Converter={StaticResource StringToIntConverter}, ConverterParameter={}{0:N0}}" Foreground="{Binding LevelForegrounds[4]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="5" Grid.Row="2"/>
+                                            <TextBlock Text="{Binding MaxCombos[4]}" Foreground="{Binding LevelForegrounds[4]}" Style="{StaticResource LevelPlaysStyle}" Grid.Column="5" Grid.Row="3"/>
                                         </Grid>
                                     </StackPanel>
                                     <Border BorderBrush="LightGray" BorderThickness="1,0,0,0" Grid.Column="1">

@@ -55,6 +55,7 @@ namespace BeatSaberMan
         {
             int[] plays = { 0, 0, 0, 0, 0 };
             int[] highScores = { -1, -1, -1, -1, -1 };
+            int[] maxCombos = { -1, -1, -1, -1, -1 };
             string levelDirName = "custom_level_" + dir.Split(@"\")[^1];
             string songHash = SongHashes.ContainsKey(dir) ? SongHashes[dir]["songHash"].ToString() : "";
             foreach (dynamic dat in LocalPlayerData)
@@ -63,11 +64,16 @@ namespace BeatSaberMan
                 {
                     plays[(int)dat["difficulty"]] += (int)dat["playCount"];
                     highScores[(int)dat["difficulty"]] = (int)dat["highScore"];
+                    int maxcombo = (int)dat["maxCombo"];
+                    maxCombos[(int)dat["difficulty"]] = (bool)dat["fullCombo"] ? -maxcombo : maxcombo;
                 }
             }
-            var dict = new Dictionary<string, int[]>();
-            dict.Add("plays", plays);
-            dict.Add("highScores", highScores);
+            var dict = new Dictionary<string, int[]>
+            {
+                { "plays", plays },
+                { "highScores", highScores },
+                { "maxCombos", maxCombos }
+            };
             return dict;
         }
 
@@ -140,7 +146,7 @@ namespace BeatSaberMan
                 dynamic info = GetSongInfo(dir);
                 if (info == null) continue;
                 var data = GetPlaysData(dir, info);
-                Song song = new Song(dir, data["plays"], data["highScores"], info);
+                Song song = new Song(dir, data["plays"], data["highScores"], data["maxCombos"], info);
                 song.TrackTime = GetMediaDuration(dir + @"\" + song.Filename);
                 if (song.HasErrors()) ErroneousSongCount++;
                 songs.Add(song);
@@ -152,7 +158,7 @@ namespace BeatSaberMan
             int index = songs.IndexOf(pSong);
             dynamic info = GetSongInfo(pSong.SongDir);
             var data = GetPlaysData(pSong.SongDir, info);
-            Song song = new Song(pSong.SongDir, data["plays"], data["highScores"], info);
+            Song song = new Song(pSong.SongDir, data["plays"], data["highScores"], data["maxCombos"], info);
             song.TrackTime = GetMediaDuration(song.SongDir + @"\" + song.Filename);
             songs.RemoveAt(index);
             songs.Insert(index, song);

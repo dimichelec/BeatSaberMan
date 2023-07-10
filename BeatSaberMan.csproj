@@ -9,6 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="libvlc\**" />
+    <EmbeddedResource Remove="libvlc\**" />
+    <None Remove="libvlc\**" />
+    <Page Remove="libvlc\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="libvlc.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="LibVLCSharp" Version="3.6.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />

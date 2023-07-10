@@ -23,6 +23,7 @@ namespace BeatSaberMan
         public string[] LevelBackgrounds { get; set; }
         public string[] Plays { get; set; }
         public string[] HighScores { get; set; }
+        public string[] MaxCombos { get; set; }
         public dynamic DifficultyBeatmapSets {  get; set; }
         public int TotalPlays { get; set; }
         public string LevelErrors { get; set; }
@@ -92,7 +93,7 @@ namespace BeatSaberMan
             return plays > 0.8 ? "GreenYellow" : plays > 0.5 ? "Yellow" : plays > 0.0 ? "Orange" : "Transparent";
         }
 
-        public dynamic GetMapData(dynamic difficultyBeatmapSets, int[] playCounts, int[] pHighScores)
+        public dynamic GetMapData(dynamic difficultyBeatmapSets, int[] playCounts, int[] pHighScores, int[] pMaxCombos)
         {
             int totalPlays = playCounts.Sum();
             Dictionary<string, object> data = new Dictionary<string, object>
@@ -110,6 +111,7 @@ namespace BeatSaberMan
             string[] backgrounds = new[] { "", "", "", "", "" };
             string[] plays = new[] { "", "", "", "", "" };
             string[] highScores = new[] { "", "", "", "", "" };
+            string[] maxCombos = new[] { "", "", "", "", "" };
             foreach ((string level, int index) in levels.Select((level, index) => (level, index)))
             {
                 if (maps.ContainsKey(level))
@@ -118,6 +120,16 @@ namespace BeatSaberMan
                     backgrounds[index] = "Transparent";
                     plays[index] = playCounts[index].ToString();
                     highScores[index] = pHighScores[index] > 0 ? pHighScores[index].ToString() : "";
+                    if (pMaxCombos[index] == 0 || pMaxCombos[index] == -1)
+                    {
+                        maxCombos[index] = "";
+                    } else if (pMaxCombos[index] < -1)
+                    {
+                        maxCombos[index] = (-pMaxCombos[index]).ToString() + " full";
+                    } else
+                    {
+                        maxCombos[index] = pMaxCombos[index].ToString();
+                    }
                     errors += maps[level] != 1 ? "1" : "0";
                     if (maps[level] != 1) errorCount++;
                 }
@@ -125,7 +137,7 @@ namespace BeatSaberMan
                 {
                     foregrounds[index] = "LightGray";
                     backgrounds[index] = "Transparent";
-                    plays[index] = highScores[index] = "";
+                    plays[index] = highScores[index] = maxCombos[index] = "";
                     errors += "-";
                 }
             }
@@ -153,12 +165,13 @@ namespace BeatSaberMan
             data["Backgrounds"] = backgrounds;
             data["Plays"] = plays;
             data["HighScores"] = highScores;
+            data["MaxCombos"] = maxCombos;
             return data;
         }
 
         // --- Constructor ----------------------------------------------------------------------------------------------------
 
-        public Song(string dir, int[] plays, int[] highScores, dynamic info)
+        public Song(string dir, int[] plays, int[] highScores, int[] maxCombos, dynamic info)
         {
             SongDir = dir;
 
@@ -178,11 +191,12 @@ namespace BeatSaberMan
             DifficultyBeatmapSets = info._difficultyBeatmapSets;
 
             // copy map data values
-            dynamic mapData = GetMapData(info._difficultyBeatmapSets, plays, highScores);
+            dynamic mapData = GetMapData(info._difficultyBeatmapSets, plays, highScores, maxCombos);
             LevelForegrounds = mapData["Foregrounds"];
             LevelBackgrounds = mapData["Backgrounds"];
             Plays = mapData["Plays"];
             HighScores = mapData["HighScores"];
+            MaxCombos = mapData["MaxCombos"];
             TotalPlays = mapData["TotalPlays"];
             LevelErrors = mapData["LevelErrors"];
             ErrorCount = mapData["ErrorCount"];

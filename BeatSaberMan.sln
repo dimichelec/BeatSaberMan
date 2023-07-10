@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BeatSaberMan", "BeatSaberMa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E9E2FD7-A5B6-467E-AA7E-EDE3A1D36E10}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{0DC57285-BF81-42A6-A726-A9CB2B0CAC73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,8 @@ Global
 		{DB63D620-DC79-43F6-B930-9D7F9D099BB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB63D620-DC79-43F6-B930-9D7F9D099BB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB63D620-DC79-43F6-B930-9D7F9D099BB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DC57285-BF81-42A6-A726-A9CB2B0CAC73}.Debug|Any CPU.ActiveCfg = Debug
+		{0DC57285-BF81-42A6-A726-A9CB2B0CAC73}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

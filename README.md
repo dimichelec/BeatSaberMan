@@ -30,8 +30,6 @@ Coding Notes:
   - count of songs, count of maps with errors, etc.
   - button to fix all erroneous maps
 
-* add high score info
-
 * select practice mode or something to signal a delete in BSM
 
 * is there a way to setup a filter in BSM that will show-up in BS, or

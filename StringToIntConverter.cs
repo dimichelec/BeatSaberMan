@@ -10,12 +10,11 @@ namespace BeatSaberMan
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int result;
-            if (value != "" && int.TryParse(value.ToString(), out result))
+            if ((string)value == "" || !int.TryParse(value.ToString(), out int result))
             {
-                return string.Format((string)parameter, result);
+                return value;
             }
-            return value;
+            return string.Format((string)parameter, result);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
