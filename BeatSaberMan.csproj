@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <StartupObject>BeatSaberMan.App</StartupObject>
+    <ApplicationIcon>BeatSaberMan.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="libvlc\**" />
+    <EmbeddedResource Remove="libvlc\**" />
+    <None Remove="libvlc\**" />
+    <Page Remove="libvlc\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="libvlc.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp" Version="3.6.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.18" />
+  </ItemGroup>
+
+</Project>
