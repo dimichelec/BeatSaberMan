@@ -8,7 +8,7 @@ BeatSaberMan is an open source Beat Saber custom song manager written by [Carmen
 This C# Windows WPF app makes it easy to review the list of custom songs you currently have installed
   on Beat Saber, see play stats, fix a song that has bad beatmaps that won't load, and delete a song folder and its contents.
 
-* To install it on a Windows machine, run Installer/Debug/BeatSaberMan Windows x64 Installer.msi
+##### To install BeatSaberMan on a Windows machine, run Installer/Debug/BeatSaberMan Windows x64 Installer.msi
 
 ---
 # License
@@ -37,8 +37,6 @@ Coding Notes:
   re-order list to show up in BS in a differnt order
 
 * add a way to mark a song just in this UI
-
-* post it on GitHub, Reddit, or something
 
 * clean-up code
   
