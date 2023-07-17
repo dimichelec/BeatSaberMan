@@ -12,7 +12,7 @@ namespace BeatSaberMan
     internal class Song
     {
         public string Filename { get; set; }
-        public string SongDir { get; set; }
+        public string SongPath { get; set; }
         public BitmapImage CoverImage { get; set; }
         public string SongName { get; set; }
         public string Artist { get; set; }
@@ -39,7 +39,7 @@ namespace BeatSaberMan
 
         public bool TestBeatmapFile(string mapFilename)
         {
-            StreamReader infoFile = new StreamReader(SongDir + @"\" + mapFilename);
+            StreamReader infoFile = new StreamReader(SongPath + @"\" + mapFilename);
             string stored = infoFile.ReadToEnd();
             infoFile.Close();
 
@@ -62,7 +62,7 @@ namespace BeatSaberMan
 
         public bool FixBeatmap(string mapFilename)
         {
-            string path = SongDir + @"\" + mapFilename;
+            string path = SongPath + @"\" + mapFilename;
             StreamReader reader = new StreamReader(path);
             JObject json = JObject.Parse(reader.ReadToEnd());
             reader.Close();
@@ -173,7 +173,7 @@ namespace BeatSaberMan
 
         public Song(string dir, int[] plays, int[] highScores, int[] maxCombos, dynamic info)
         {
-            SongDir = dir;
+            SongPath = dir;
 
             // create the cover image in the song object
             CoverImage = new BitmapImage();

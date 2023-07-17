@@ -100,6 +100,10 @@
                 <MenuItem Header="_BPM" Tag="-BPM" Style="{StaticResource SortByMenuStyle}"/>
                 <MenuItem Header="B_roken Maps" Tag="-ErrorCount" Style="{StaticResource SortByMenuStyle}"/>
             </MenuItem>
+            <MenuItem Header="Custom Order">
+                <MenuItem Header="_Save Custom Song Order" Click="SaveCustomSongOrder_Click" />
+                <MenuItem Header="_Undo/Clean Custom Song Order" Click="UndoCleanCustomSongOrder_Click" />
+            </MenuItem>
         </Menu>
         <StackPanel Orientation="Horizontal" Height="64" DockPanel.Dock="Top">
             <Button Click="RefreshButton_Click" Style="{StaticResource TopButtonStyle}">
@@ -127,7 +131,7 @@
                                 </Rectangle.Fill>
                             </Rectangle>
                             <StackPanel Grid.Column="1" Orientation="Vertical" Margin="6,0,0,0" Grid.ColumnSpan="2">
-                                <TextBlock Text="{Binding SongName}" FontSize="24" Margin="-2,0,0,0"/>
+                                <TextBlock Text="{Binding SongName}" FontSize="24" Margin="-2,0,0,0" />
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -191,16 +195,16 @@
                                 </Grid>
                             </StackPanel>
                             <StackPanel Grid.Column="3" Orientation="Vertical" Width="39" Margin="2,2,2,2">
-                                <Button Click="PlayButton_Click" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                <Button Click="PlayButton_Click" Tag="{Binding SongPath}" Style="{StaticResource ItemButtonStyle}">
                                     <Image Source="{StaticResource PlayIcon}"/>
                                 </Button>
-                                <Button Click="FolderButton_Click" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                <Button Click="FolderButton_Click" Tag="{Binding SongPath}" Style="{StaticResource ItemButtonStyle}">
                                     <Image Source="{StaticResource FolderIcon}"/>
                                 </Button>
-                                <Button Click="FixButton_Click" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}" IsEnabled="{Binding FixEnabled}">
+                                <Button Click="FixButton_Click" Tag="{Binding SongPath}" Style="{StaticResource ItemButtonStyle}" IsEnabled="{Binding FixEnabled}">
                                     <Image Source="{StaticResource FixIcon}"/>
                                 </Button>
-                                <Button Click="DeleteButton_Click" Tag="{Binding SongDir}" Style="{StaticResource ItemButtonStyle}">
+                                <Button Click="DeleteButton_Click" Tag="{Binding SongPath}" Style="{StaticResource ItemButtonStyle}">
                                     <Image Source="{StaticResource DeleteIcon}"/>
                                 </Button>
                             </StackPanel>

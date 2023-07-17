@@ -1,9 +1,15 @@
 ﻿using LibVLCSharp.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Input;
+using System.Windows.Shapes;
+using Path = System.IO.Path;
 
 namespace BeatSaberMan
 {
@@ -12,7 +18,17 @@ namespace BeatSaberMan
         private LibVLC libvlc;
         private MediaPlayer vlcPlayer;
 
-        const string BeatSaberRootPath = @"C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
+        readonly string BeatSaberRootPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)
+            + @"\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
+
+        readonly string BeatSaberDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
+            + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber\";
+
+        string BeatSaberSongHashPath = null;
+        string BeatSaberPlayerDataPath = null;
+
+        public const int CustomOrderPrefixLength = 8;
+        public const string CustomOrderRegex = @"^_\d{6}_";
 
         public int ErroneousSongCount { get; set; }
 
@@ -26,12 +42,10 @@ namespace BeatSaberMan
 
         public void GetSongAppData()
         {
-            string dataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-                + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber\";
             SongHashes = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(
-                new StreamReader(dataDir + @"\SongHashData.dat").ReadToEnd());
+                new StreamReader(BeatSaberSongHashPath).ReadToEnd());
             PlayerData = JsonConvert.DeserializeObject<Dictionary<string, object>>(
-                new StreamReader(dataDir + @"\PlayerData.dat").ReadToEnd());
+                new StreamReader(BeatSaberPlayerDataPath).ReadToEnd());
             List<object> tmp = JsonConvert.DeserializeObject<List<object>>(PlayerData["localPlayers"].ToString());
             Dictionary<string, object> tmp2 = JsonConvert.DeserializeObject<Dictionary<string, object>>(tmp[0].ToString());
             LocalPlayerData = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(tmp2["levelsStatsData"].ToString());
@@ -77,6 +91,170 @@ namespace BeatSaberMan
             return dict;
         }
 
+        public bool CleanSongIdInPlayerData()
+        {
+            StreamReader reader = new StreamReader(BeatSaberPlayerDataPath);
+            JObject jsonPlayerData = JObject.Parse(reader.ReadToEnd());
+            reader.Close();
+
+            bool change = false;
+            bool keep_searching = true;
+            Regex regex = new Regex(CustomOrderRegex);
+            while (keep_searching)
+            {
+                keep_searching = false;
+                foreach (var player in jsonPlayerData["localPlayers"])
+                {
+                    // change element names in "localPlayers"."favoritesLevelIds" array
+                    foreach (var id in player["favoritesLevelIds"])
+                    {
+                        string folderName = Path.GetFileName((string)id);
+                        if ((folderName.Length > (13 + CustomOrderPrefixLength)) &&
+                            (folderName[..13] == "custom_level_") && 
+                            (regex.IsMatch(folderName[13..])))
+                        {
+                            id.Replace("custom_level_" + folderName[13..][CustomOrderPrefixLength..]);
+                            change = keep_searching = true;
+                            break;
+                        }
+                    }
+                    if (keep_searching) break;
+
+                    // change element names in all relevant "localPlayers"."levelsStatsData"[].{ "levelId" }
+                    foreach (var stats in player["levelsStatsData"])
+                    {
+                        string folderName = Path.GetFileName((string)stats["levelId"]);
+                        if ((folderName.Length > (13 + CustomOrderPrefixLength)) &&
+                            (folderName[..13] == "custom_level_") &&
+                            (regex.IsMatch(folderName[13..])))
+                        {
+                            stats["levelId"].Replace("custom_level_" + folderName[13..][CustomOrderPrefixLength..]);
+                            change = keep_searching = true;
+                            break;
+                        }
+                    }
+                    if (keep_searching) break;
+                }
+            }
+
+            if (change)
+            {
+                StreamWriter writer = new StreamWriter(BeatSaberPlayerDataPath);
+                writer.WriteLine(JsonConvert.SerializeObject(jsonPlayerData, Formatting.None));
+                writer.Close();
+            }
+            return change;
+        }
+
+        public bool CleanSongHashId()
+        {
+            StreamReader reader = new StreamReader(BeatSaberSongHashPath);
+            JObject jsonSongHashes = JObject.Parse(reader.ReadToEnd());
+            reader.Close();
+
+            bool change = false;
+            bool keep_searching = true;
+            Regex regex = new Regex(CustomOrderRegex);
+            while (keep_searching)
+            {
+                keep_searching = false;
+                foreach (var hash in jsonSongHashes)
+                {
+                    string folderName = Path.GetFileName(hash.Key);
+                    if (regex.IsMatch(folderName))
+                    {
+                        string newKey = Path.GetDirectoryName(hash.Key) + @"\" + folderName[CustomOrderPrefixLength..];
+                        string node = "{"
+                            + "\"directoryHash\":" + (string)hash.Value["directoryHash"] + ","
+                            + "\"songHash\":\"" + (string)hash.Value["songHash"] + "\""
+                            + "}";
+                        jsonSongHashes.Remove(hash.Key);
+                        jsonSongHashes.Add(newKey, JObject.Parse(node));
+                        change = keep_searching = true;
+                    }
+                    if (keep_searching) break;
+                }
+            }
+            if (change)
+            {
+                StreamWriter writer = new StreamWriter(BeatSaberSongHashPath);
+                writer.WriteLine(JsonConvert.SerializeObject(jsonSongHashes, Formatting.None));
+                writer.Close();
+                return true;
+            }
+            return false;
+        }
+
+        public bool ReplaceSongIdInPlayerData(string oldID, string newID)
+        {
+            StreamReader reader = new StreamReader(BeatSaberPlayerDataPath);
+            JObject jsonPlayerData = JObject.Parse(reader.ReadToEnd());
+            reader.Close();
+
+            bool change = false;
+            bool keep_searching = true;
+            while (keep_searching) {
+                keep_searching = false;
+                foreach (var player in jsonPlayerData["localPlayers"])
+                {
+                    // change element names in "localPlayers"."favoritesLevelIds" array
+                    foreach (var id in player["favoritesLevelIds"])
+                    {
+                        if ((string)id == "custom_level_" + oldID)
+                        {
+                            id.Replace("custom_level_" + newID);
+                            change = keep_searching = true;
+                            break;
+                        }
+                    }
+                    if (keep_searching) break;
+
+                    // change element names in all relevant "localPlayers"."levelsStatsData"[].{ "levelId" }
+                    foreach (var stats in player["levelsStatsData"])
+                    {
+                        if ((string)stats["levelId"] == "custom_level_" + oldID)
+                        {
+                            stats["levelId"].Replace("custom_level_" + newID);
+                            change = keep_searching = true;
+                            break;
+                        }
+                    }
+                    if (keep_searching) break;
+                }
+            }
+
+            if (change)
+            {
+                StreamWriter writer = new StreamWriter(BeatSaberPlayerDataPath);
+                writer.WriteLine(JsonConvert.SerializeObject(jsonPlayerData, Formatting.None));
+                writer.Close();
+            }
+            return change;
+        }
+
+        public bool ReplaceSongHashId(string oldPath, string newPath)
+        {
+            StreamReader reader = new StreamReader(BeatSaberSongHashPath);
+            JObject jsonSongHashes = JObject.Parse(reader.ReadToEnd());
+            reader.Close();
+
+            if (jsonSongHashes.Property(oldPath) != null)
+            {
+                string node = "{"
+                    + "\"directoryHash\":" + (string)jsonSongHashes[oldPath]["directoryHash"] + ","
+                    + "\"songHash\":\"" + (string)jsonSongHashes[oldPath]["songHash"] + "\""
+                    + "}";
+                jsonSongHashes.Remove(oldPath);
+                jsonSongHashes.Add(newPath, JObject.Parse(node));
+
+                StreamWriter writer = new StreamWriter(BeatSaberSongHashPath);
+                writer.WriteLine(JsonConvert.SerializeObject(jsonSongHashes, Formatting.None));
+                writer.Close();
+                return true;
+            }
+            return false;
+        }
+
         private void InitVLC()
         {
             libvlc = new LibVLC(enableDebugLogs: true);
@@ -92,7 +270,7 @@ namespace BeatSaberMan
         {
             foreach (Song song in songs)
             {
-                if (song.SongDir.Equals(dir))
+                if (song.SongPath.Equals(dir))
                 {
                     vlcPlayer.Play(new Media(libvlc, new Uri(dir + @"\" + song.Filename)));
                     return;
@@ -109,7 +287,7 @@ namespace BeatSaberMan
         {
             foreach (Song song in songs)
             {
-                if (song.SongDir.Equals(dir)) return song;
+                if (song.SongPath.Equals(dir)) return song;
             }
             return null;
         }
@@ -156,10 +334,10 @@ namespace BeatSaberMan
         public Song Reload(Song pSong)
         {
             int index = songs.IndexOf(pSong);
-            dynamic info = GetSongInfo(pSong.SongDir);
-            var data = GetPlaysData(pSong.SongDir, info);
-            Song song = new Song(pSong.SongDir, data["plays"], data["highScores"], data["maxCombos"], info);
-            song.TrackTime = GetMediaDuration(song.SongDir + @"\" + song.Filename);
+            dynamic info = GetSongInfo(pSong.SongPath);
+            var data = GetPlaysData(pSong.SongPath, info);
+            Song song = new Song(pSong.SongPath, data["plays"], data["highScores"], data["maxCombos"], info);
+            song.TrackTime = GetMediaDuration(song.SongPath + @"\" + song.Filename);
             songs.RemoveAt(index);
             songs.Insert(index, song);
             UpdateErrorCount();
@@ -175,6 +353,8 @@ namespace BeatSaberMan
 
         public SongList()
         {
+            BeatSaberSongHashPath = BeatSaberDataPath + @"\SongHashData.dat";
+            BeatSaberPlayerDataPath = BeatSaberDataPath + @"\PlayerData.dat";
             InitVLC();
             GetSongAppData();
         }

@@ -5,6 +5,10 @@ using System.Windows.Controls;
 using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Text.RegularExpressions;
+using System.Windows.Documents.Serialization;
+using Newtonsoft.Json.Linq;
+using System.Xml.Linq;
 
 namespace BeatSaberMan
 {
@@ -26,7 +30,7 @@ namespace BeatSaberMan
         private bool ReloadSong(Song pSong)
         {
             Song song = songList.Reload(pSong);
-            int index = FindMyListBoxItem(pSong.SongDir).index;
+            int index = FindMyListBoxItem(pSong.SongPath).index;
             lbSongs.Items.RemoveAt(index);
             lbSongs.Items.Insert(index, song);
             return !song.HasErrors();
@@ -43,6 +47,40 @@ namespace BeatSaberMan
                 lastPlayed = null;
             }
             return tmp;
+        }
+
+        private bool ResetSongCustomOrder(string songPath)
+        {
+            string folderName = Path.GetFileName(songPath);
+            if (new Regex(SongList.CustomOrderRegex).IsMatch(folderName))
+            {
+                string newSongPath = songPath.Replace(folderName, folderName[SongList.CustomOrderPrefixLength..]);
+                Directory.Move(songPath, newSongPath);
+                return true;
+            }
+            return false;
+        }
+
+        private bool UndoCustomSongOrder(bool not_a_test)
+        {
+            bool change = false;
+            Regex regex = new Regex(SongList.CustomOrderRegex);
+            foreach (Song item in lbSongs.Items)
+            {
+                string songPath = item.SongPath;
+                string folderName = Path.GetFileName(songPath);
+                if (regex.IsMatch(folderName))
+                {
+                    change = true;
+                    if (not_a_test)
+                    {
+                        songList.ReplaceSongIdInPlayerData(folderName, folderName[SongList.CustomOrderPrefixLength..]);
+                        songList.ReplaceSongHashId(folderName, folderName[SongList.CustomOrderPrefixLength..]);
+                        ResetSongCustomOrder(songPath);
+                    }
+                }
+            }
+            return change;
         }
 
         // --- MainWindow Managment -------------------------------------------------------------------------------------------
@@ -79,23 +117,36 @@ namespace BeatSaberMan
             {
                 if (lbSongs.ItemContainerGenerator.ContainerFromItem(item) is FrameworkElement container)
                     if (container.DataContext is Song dat)
-                        if (dat.SongDir == dir)
+                        if (dat.SongPath == dir)
                             return (item, lbSongs.Items.IndexOf(item));
             }
             return (null, -1);
         }
 
-        private void RefreshListBox()
+        private void DisableSongList()
         {
             System.Windows.Input.Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             lbSongs.IsEnabled = false;
             lbSongs.Opacity = 0.1;
+        }
+
+        private void EnableSongList()
+        {
+            lbSongs.IsEnabled = true;
+            lbSongs.Opacity = 1;
+            System.Windows.Input.Mouse.OverrideCursor = null;
+        }
+
+        private void RefreshListBox()
+        {
+            DisableSongList();
             Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
                 songList.Clear();
                 songList.Load();
                 lbSongs.Items.Clear();
                 LoadSongs();
             }));
+            EnableSongList();
             lbSongs.IsEnabled = true;
             lbSongs.Opacity = 1;
             UpdateTopBar();
@@ -184,6 +235,80 @@ namespace BeatSaberMan
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             StopPlaying();
+            RefreshListBox();
+        }
+
+        private void SaveCustomSongOrder_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(
+                "This will modify your custom song folder names and your player data files. " +
+                "Do you want to continue?",
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                MessageBoxButton.YesNo
+            ) == MessageBoxResult.No) return;
+
+            StopPlaying();
+            DisableSongList();
+            UndoCustomSongOrder(true);
+            ulong index = 0;
+            foreach (Song item in lbSongs.Items)
+            {
+                string oldSongPath = item.SongPath;
+                string oldDirName = Path.GetFileName(oldSongPath);
+                string newDirName = string.Format(@"_{0:D6}_{1}", index, oldDirName);
+                string newSongPath = Path.GetDirectoryName(oldSongPath) + @"\" + newDirName;
+                songList.ReplaceSongIdInPlayerData(oldDirName, newDirName);
+                songList.ReplaceSongHashId(oldSongPath, newSongPath);
+                Directory.Move(oldSongPath, newSongPath);
+                index++;
+            }
+            EnableSongList();
+            songList.GetSongAppData();
+            RefreshListBox();
+        }
+
+        private void UndoCleanCustomSongOrder_Click(object sender, RoutedEventArgs e)
+        {
+            StopPlaying();
+            if (!UndoCustomSongOrder(false))
+            {
+                string prompt = "No songs are set into a custom order. Doing a cleanup pass.";
+                MessageBox.Show(
+                    prompt,
+                    System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                    MessageBoxButton.OK, MessageBoxImage.Exclamation
+                );
+
+                bool change = false;
+                DisableSongList();
+                Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
+                    if (songList.CleanSongIdInPlayerData()) change = true;
+                    if (songList.CleanSongHashId()) change = true;
+                }));
+                EnableSongList();
+                if (change)
+                {
+                    songList.GetSongAppData();
+                    RefreshListBox();
+                }
+                return;
+            }
+
+            if (MessageBox.Show(
+                "This will change the song folder names, putting them back to their original. " + 
+                "Do you want to continue?",
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Name,
+                MessageBoxButton.YesNo
+            ) == MessageBoxResult.No) return;
+
+            DisableSongList();
+            Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
+                UndoCustomSongOrder(true);
+                songList.CleanSongIdInPlayerData();
+                songList.CleanSongHashId();
+            }));
+            EnableSongList();
+            songList.GetSongAppData();
             RefreshListBox();
         }
 

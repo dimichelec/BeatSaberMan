@@ -10,6 +10,28 @@ This C# Windows WPF app makes it easy to review the list of custom songs you cur
 
 ##### To install BeatSaberMan on a Windows machine, run Installer/Debug/BeatSaberMan Windows x64 Installer.msi
 
+## To use BeatSaberMan
+
+Running BeatSaberMan (BSM) will show the list of your installed custom songs, which on a Windows machine
+are installed at `%PROGRAMFILES(X86)%\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels`.
+
+The `Sort` menu item lets you change the order of the list as viewed in BSM.
+To let Beat Saber have the same custom song order, use the `Custom Order | Save Custom Song Order` menu
+item.
+
+> **BEWARE: Using the `Custom Order | Save Custom Song Order` command from the menu will change the
+> folder names of your custom songs and modify your `PlayerData.dat` and `SongHashData.dat` files.**
+
+Use the `Custom Order | Undo/Clean Custom Song Order` to undo the changes made by
+`Custom Order | Save Custom Song Order`.
+
+The recycle button under the menu reloads the list of custom songs.
+
+The buttons along the right edge of each song cell, from top to bottom, let you play the song's audio,
+open the folder where the song is installed, fix the song's data files
+(only active if the song's data files are not working), or delete the song.
+
+
 ---
 # License
 
@@ -27,9 +49,18 @@ This C# Windows WPF app makes it easy to review the list of custom songs you cur
 
 Coding Notes:
 
+
+- https://github.com/dimichelec/BeatSaberMan
+- https://www.reddit.com/r/beatsaber/comments/ts61vd/comment/jei0uc2/?context=3
+- %PROGRAMFILES(X86)%\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels
+- %APPDATA%\..\LocalLow\Hyperbolic Magnetism\Beat Saber\PlayerData.dat
+
+* make backups of PlayerData.dat and SongHashData.dat before modifying for sort
 * add top area stats and functions:
-  - count of songs, count of maps with errors, etc.
+  - count of maps with errors, etc.
   - button to fix all erroneous maps
+
+* allow edit of Title, Artist, Map Author
 
 * select practice mode or something to signal a delete in BSM
 
@@ -39,6 +70,9 @@ Coding Notes:
 * add a way to mark a song just in this UI
 
 * clean-up code
+
+* how can you make the title cell crop the end if the text is too long
+  so a horizontal scrollbar doesn't appear when the window is at its smallest
   
 -------------------------------------------------------------------- -->
 
