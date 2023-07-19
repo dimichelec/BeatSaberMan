@@ -55,7 +55,8 @@ namespace BeatSaberMan
             if (new Regex(SongList.CustomOrderRegex).IsMatch(folderName))
             {
                 string newSongPath = songPath.Replace(folderName, folderName[SongList.CustomOrderPrefixLength..]);
-                Directory.Move(songPath, newSongPath);
+                if (!Directory.Exists(newSongPath))
+                    Directory.Move(songPath, newSongPath);
                 return true;
             }
             return false;

@@ -22,10 +22,10 @@ namespace BeatSaberMan
             + @"\Steam\steamapps\common\Beat Saber\Beat Saber_Data\CustomLevels";
 
         readonly string BeatSaberDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-            + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber\";
+            + @"\..\LocalLow\Hyperbolic Magnetism\Beat Saber";
 
-        string BeatSaberSongHashPath = null;
-        string BeatSaberPlayerDataPath = null;
+        readonly string BeatSaberSongHashPath = null;
+        readonly string BeatSaberPlayerDataPath = null;
 
         public const int CustomOrderPrefixLength = 8;
         public const string CustomOrderRegex = @"^_\d{6}_";
@@ -319,8 +319,10 @@ namespace BeatSaberMan
         {
             ErroneousSongCount = 0;
             string[] dirs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly);
+            Regex regex = new Regex(@"^(" + CustomOrderRegex + @")?[0-9a-fA-F]+ \(.*\)");
             foreach (string dir in dirs)
             {
+                if (!regex.IsMatch(Path.GetFileName(dir))) continue;
                 dynamic info = GetSongInfo(dir);
                 if (info == null) continue;
                 var data = GetPlaysData(dir, info);
