@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Documents.Serialization;
 using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
+using System.Windows.Input;
 
 namespace BeatSaberMan
 {
@@ -88,8 +89,10 @@ namespace BeatSaberMan
 
         public MainWindow()
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             InitializeComponent();
             RefreshListBox();
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
         }
 
         private void UpdateTopBar()

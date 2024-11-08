@@ -42,8 +42,15 @@ namespace BeatSaberMan
 
         public void GetSongAppData()
         {
-            SongHashes = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(
-                new StreamReader(BeatSaberSongHashPath).ReadToEnd());
+            try
+            {
+                SongHashes = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, object>>>(
+                    new StreamReader(BeatSaberSongHashPath).ReadToEnd());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Couldn't load SongHashes: {e.Message}");
+            }
             PlayerData = JsonConvert.DeserializeObject<Dictionary<string, object>>(
                 new StreamReader(BeatSaberPlayerDataPath).ReadToEnd());
             List<object> tmp = JsonConvert.DeserializeObject<List<object>>(PlayerData["localPlayers"].ToString());
@@ -71,7 +78,8 @@ namespace BeatSaberMan
             int[] highScores = { -1, -1, -1, -1, -1 };
             int[] maxCombos = { -1, -1, -1, -1, -1 };
             string levelDirName = "custom_level_" + dir.Split(@"\")[^1];
-            string songHash = SongHashes.ContainsKey(dir) ? SongHashes[dir]["songHash"].ToString() : "";
+            string songHash = null;
+            if (SongHashes != null) songHash = SongHashes.ContainsKey(dir) ? SongHashes[dir]["songHash"].ToString() : "";
             foreach (dynamic dat in LocalPlayerData)
             {
                 if ((dat["levelId"] == info._songName.ToString()) || (dat["levelId"] == levelDirName) || (dat["levelId"] == songHash))
@@ -317,6 +325,7 @@ namespace BeatSaberMan
 
         public void Load()
         {
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
             ErroneousSongCount = 0;
             string[] dirs = Directory.GetDirectories(BeatSaberRootPath, "*", SearchOption.TopDirectoryOnly);
             Regex regex = new Regex(@"^(" + CustomOrderRegex + @")?[0-9a-fA-F]+ \(.*\)");
@@ -331,6 +340,7 @@ namespace BeatSaberMan
                 if (song.HasErrors()) ErroneousSongCount++;
                 songs.Add(song);
             }
+            Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
         }
 
         public Song Reload(Song pSong)
