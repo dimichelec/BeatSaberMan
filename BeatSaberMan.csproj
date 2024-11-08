@@ -16,7 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="BeatSaberMan.ico" />
+    <None Remove="BeatSaberMan.png" />
     <None Remove="libvlc.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="BeatSaberMan.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="BeatSaberMan.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

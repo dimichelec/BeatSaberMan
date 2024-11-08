@@ -10,6 +10,7 @@ using System.Windows.Documents.Serialization;
 using Newtonsoft.Json.Linq;
 using System.Xml.Linq;
 using System.Windows.Input;
+using LibVLCSharp.Shared;
 
 namespace BeatSaberMan
 {
@@ -89,11 +90,11 @@ namespace BeatSaberMan
 
         public MainWindow()
         {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+            SplashScreen splash = new SplashScreen("BeatSaberMan.png");
+            splash.Show(true);
             InitializeComponent();
             RefreshListBox();
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Arrow;
-        }
+        } 
 
         private void UpdateTopBar()
         {
