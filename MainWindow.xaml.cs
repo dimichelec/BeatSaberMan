@@ -90,8 +90,6 @@ namespace BeatSaberMan
 
         public MainWindow()
         {
-            SplashScreen splash = new SplashScreen("BeatSaberMan.png");
-            splash.Show(true);
             InitializeComponent();
             RefreshListBox();
         } 
